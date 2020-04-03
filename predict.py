@@ -35,7 +35,7 @@ def main():
     with open(cat_name, 'r') as json_file:
         cat_to_name = json.load(json_file)
         
-    pts = uf.predict(image, model, top_k)
+    pts = uf.predict(image, model, top_k, gpu)
     labels = [cat_to_name[str(index + 1)] for index in np.array(pts[1][0])]
     probability = np.array(pts[0][0])
     i=0
