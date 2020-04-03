@@ -20,6 +20,7 @@ parser.add_argument('input', default="./flowers/test/1/image_06752.jpg", type=st
 parser.add_argument('checkpoint', default='./checkpoint.pth', type = str, help="Checkpoint file")
 parser.add_argument('--cat_name', type=str, default='./cat_to_name.json', help='category names file')
 parser.add_argument('--top_k', default=3, type=int, help='Provide topk')
+parser.add_argument('--gpu', type=int, default=0, help='use gpu or cpu')
 
 args = parser.parse_args()
 
@@ -27,6 +28,7 @@ image = args.input
 top_k = args.top_k
 checp = args.checkpoint
 cat_name = args.cat_name
+gpu = True if args.gpu == 1 and torch.cuda.is_available() else False
 
 def main():
     model = uf.loadModel(checp)

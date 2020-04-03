@@ -33,7 +33,7 @@ dp = args.dropout
 h_layer = args.hidden_units
 epochs = args.epochs
 arch = args.architecture
-gpu = True if args.gpu == 1 else False
+gpu = True if args.gpu == 1 and torch.cuda.is_available() else False
 
 def main():
     image_datasets, dataloaders = uf.dataloaders(dir_)

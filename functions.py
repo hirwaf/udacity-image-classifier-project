@@ -185,14 +185,19 @@ def processImage(image):
     
     return img_tensor
 
-def predict(image_path, model, topk=5):
-    model.to('cuda:0')
+def predict(image_path, model, topk=5, gpu=True):
+    if torch.cuda.is_available() and gpu == True:
+        model.to('cuda:0')
+        
     img_torch = processImage(image_path)
     img_torch = img_torch.unsqueeze_(0)
     img_torch = img_torch.float()
     
     with torch.no_grad():
-        output = model.forward(img_torch.cuda())
+        if torch.cuda.is_available() and gpu == True:
+            img_torch = img_torch.cuda()
+            
+        output = model.forward(img_torch)
         
     probability = F.softmax(output.data,dim=1)
     
