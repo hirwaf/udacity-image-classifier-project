@@ -146,8 +146,8 @@ def trainNet(model, criterion, optimizer, dataloaders, epochs=6, gpu=True):
                 model.train()
     
     print("-------------- Finished training -----------------------")
-    print("Epochs: {}------------------------------------".format(epochs))
-    print("Steps: {}-----------------------------".format(steps))
+    print(f'Epochs: {epochs}------------------------------------')
+    print(f'Steps: {steps}-----------------------------')
 
 def saveCheckpoint(model, train_class_to_idx, path='checkpoint.pth', arch='densenet121', lr=0.001, dp=0.5, epochs=6):
     model.class_to_idx = train_class_to_idx
