@@ -18,6 +18,7 @@ import functions as uf
 parser = argparse.ArgumentParser(description="Predict")
 parser.add_argument('input', default="./flowers/test/1/image_06752.jpg", type=str, help='Image Input')
 parser.add_argument('checkpoint', default='./checkpoint.pth', type = str, help="Checkpoint file")
+parser.add_argument('--cat_name', type=str, default='./cat_to_name.json', help='category names file')
 parser.add_argument('--top_k', default=3, type=int, help='Provide topk')
 
 args = parser.parse_args()
@@ -25,10 +26,11 @@ args = parser.parse_args()
 image = args.input
 top_k = args.top_k
 checp = args.checkpoint
+cat_name = args.cat_name
 
 def main():
     model = uf.loadModel(checp)
-    with open('cat_to_name.json', 'r') as json_file:
+    with open(cat_name, 'r') as json_file:
         cat_to_name = json.load(json_file)
         
     pts = uf.predict(image, model, top_k)

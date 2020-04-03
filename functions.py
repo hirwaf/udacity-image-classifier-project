@@ -58,14 +58,18 @@ def dataloaders(dir_  = "./flowers" ):
     
     return image_datasets, dataloaders
 
-def nnNet(h_layer=120, dp=0.5, lr=0.001):
-    model = models.densenet121(pretrained=True)
+def nnNet(architecture='densenet121', h_layer=120, dp=0.5, lr=0.001):
+    if architecture=='densenet121':
+        model = models.densenet121(pretrained=True)
+    elif architecture == 'vgg16':
+        model = models.vgg16(pretrained=True)
+    else:
+        print("\nAllowed architectures are densenet121 or vgg16.\n")
     
     for p in model.parameters():
         p.requireds_grad = False
     
-    classifier = nn.Sequential(OrderedDict([
-        ('dropout',nn.Dropout(dp)),
+    classifier = nn.Sequential(OrderedDict([       
         ('inputs', nn.Linear(1024, h_layer)),
         ('relu1', nn.ReLU()),
         ('h_layer1', nn.Linear(h_layer, 90)),
@@ -73,6 +77,7 @@ def nnNet(h_layer=120, dp=0.5, lr=0.001):
         ('h_layer2',nn.Linear(90,80)),
         ('relu3',nn.ReLU()),
         ('h_layer3',nn.Linear(80,102)),
+        ('dropout',nn.Dropout(dp)),
         ('output', nn.LogSoftmax(dim=1))
     ]))
 
@@ -82,12 +87,13 @@ def nnNet(h_layer=120, dp=0.5, lr=0.001):
 
     return model, optimizer, criterion
 
-def trainNet(model, criterion, optimizer, dataloaders, epochs=6):   
+def trainNet(model, criterion, optimizer, dataloaders, epochs=6, gpu=True):   
     steps = 0
     loss = []
     print_every = 5
-
-    model.to('cuda')
+    
+    if torch.cuda.is_available() and gpu:
+        model.to('cuda')
     
     print("\n-------------- Start training -----------------------\n")
 
@@ -96,7 +102,8 @@ def trainNet(model, criterion, optimizer, dataloaders, epochs=6):
 
         for i, (inputs, labels) in enumerate(dataloaders['train']):
             steps += 1
-            inputs, labels = inputs.to('cuda'), labels.to('cuda')
+            if torch.cuda.is_available() and gpu:
+                inputs, labels = inputs.to('cuda'), labels.to('cuda')
 
             optimizer.zero_grad()
 
@@ -114,10 +121,10 @@ def trainNet(model, criterion, optimizer, dataloaders, epochs=6):
 
                 for ii, (inputs2, labels2) in enumerate(dataloaders['valid']):
                     optimizer.zero_grad()
-
-                    inputs2, labels2 = inputs2.to('cuda'), labels2.to('cuda')
-
-                    model.to('cuda')
+                    
+                    if torch.cuda.is_available() and gpu:
+                        inputs2, labels2 = inputs2.to('cuda'), labels2.to('cuda')
+                        model.to('cuda')
 
                     with torch.no_grad():
                         logps = model.forward(inputs2)
@@ -142,10 +149,10 @@ def trainNet(model, criterion, optimizer, dataloaders, epochs=6):
     print("Epochs: {}------------------------------------".format(epochs))
     print("Steps: {}-----------------------------".format(steps))
 
-def saveCheckpoint(model, train_class_to_idx, path='checkpoint.pth', lr=0.001, dp=0.5, epochs=6):
+def saveCheckpoint(model, train_class_to_idx, path='checkpoint.pth', arch='densenet121', lr=0.001, dp=0.5, epochs=6):
     model.class_to_idx = train_class_to_idx
     model.cpu
-    torch.save({'structure' :'densenet121',
+    torch.save({'structure' : arch,
             'h_layer':120,
             'dp':dp,
             'lr':lr,
@@ -157,7 +164,8 @@ def saveCheckpoint(model, train_class_to_idx, path='checkpoint.pth', lr=0.001, d
 def loadModel(path='checkpoint.pth'):
     checkpoint = torch.load(path)
     h_layer = checkpoint['h_layer']
-    model,_,_ = nnNet(h_layer)
+    arch = checkpoint['structure']
+    model,_,_ = nnNet(arch, h_layer)
     model.class_to_idx = checkpoint['class_to_idx']
     model.load_state_dict(checkpoint['state_dict'])
     
